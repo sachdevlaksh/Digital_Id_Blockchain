@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Consortium Admin Login</title>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<link href="css/bootstrap.min.css" rel="stylesheet">
+		<link href="css/style.css" rel="stylesheet">
+		<link href="https://fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet">
+		<link href="https://unpkg.com/ng-table@3.0.1/bundles/ng-table.min.css">
+		<link href="jQueryAssets/jquery.ui.core.min.css" rel="stylesheet" type="text/css">
+		<link href="jQueryAssets/jquery.ui.theme.min.css" rel="stylesheet" type="text/css">
+		<link href="jQueryAssets/jquery.ui.tabs.min.css" rel="stylesheet" type="text/css">
+		<script src="jQueryAssets/jquery-1.11.1.min.js"></script>
+		<script src="jQueryAssets/jquery.ui-1.10.4.tabs.min.js"></script>
+		<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.9/angular.min.js"></script>
+		<script src="https://unpkg.com/ng-table@3.0.1/bundles/ng-table.min.js"></script>
+		<script src="app.js"></script>
+	</head>
+	<body ng-app="myModule" ng-controller="consortiumAdminLogin">
+	<div class="container-fluid">
+		<!-- Header Section starts here-->
+		<header class="header_bg">
+			<div class="header_left"></div>
+			<div class="header_right"></div>
+			
+			<div class="container">
+				<div class="logo_pharma">
+					<a href="#"><img src="images/logo.png" alt="logo"/></a>
+				</div>
+				
+				<div class="banner_text_right">
+					Blockchain for Business<br><b>WITH IBM BLOCKCHAIN</b>
+				</div>
+			</div>
+
+		</header> 
+		<!-- Header Section ends here-->
+		
+		
+		<!-- Content Section ends here-->
+		<div class="page_banner">
+		  	<div class="login_form admin">
+		  		<h3><b>Consortium Admin </b>Login</h3>
+		  		<div class="field_login">
+		  			<span><img src="images/login_icon01.png" alt=""/></span>
+		  			<input type="text" ng-model="username">
+		  		</div>	  		
+		  		<div class="field_login">
+		  			<span><img src="images/login_icon02.png" alt=""/></span>
+		  			<input type="password" ng-model="password">
+		  		</div>
+		  		<div class="field_login">
+		  			<input type="button" value="Login" ng-click="verifyLogin()">
+		  		</div>	  		
+		  	</div>
+		</div>
+		<!-- Content Section ends here-->
+
+		<!-- Footer Section starts here-->
+		<footer class="footer">©  copyright 2018</footer>
+		<!-- Footer Section ends here-->
+		
+	</div>
+	</body>
+
+</html>

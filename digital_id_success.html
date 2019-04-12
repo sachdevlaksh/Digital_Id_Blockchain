@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Digital Id Applied Success</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link href="css/bootstrap.min.css" rel="stylesheet">
+	<link href="css/style.css" rel="stylesheet">
+	<link href="https://fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet">
+	<link href="https://unpkg.com/ng-table@3.0.1/bundles/ng-table.min.css">
+	<link href="jQueryAssets/jquery.ui.core.min.css" rel="stylesheet" type="text/css">
+	<link href="jQueryAssets/jquery.ui.theme.min.css" rel="stylesheet" type="text/css">
+	<link href="jQueryAssets/jquery.ui.tabs.min.css" rel="stylesheet" type="text/css">
+	<script src="jQueryAssets/jquery-1.11.1.min.js"></script>
+	<script src="jQueryAssets/jquery.ui-1.10.4.tabs.min.js"></script>
+	<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.9/angular.min.js"></script>
+	<script src="https://unpkg.com/ng-table@3.0.1/bundles/ng-table.min.js"></script>
+	<script src="app.js"></script>
+</head>
+
+<body ng-app="myModule" ng-controller="digitalIdSuccess">
+<div class="container-fluid"> 
+  
+  <!-- Header Section starts here-->
+  <header class="header_bg">
+    <div class="header_left"></div>
+    <div class="header_right"></div>
+    <div class="container">
+      <div class="logo_pharma"> <a href="#"><img src="images/logo.png" alt="logo"/></a> </div>
+      <div class="banner_text_right"> Blockchain for Business<br>
+        <b>WITH IBM BLOCKCHAIN</b> </div>
+    </div>
+  </header>
+  <!-- Header Section ends here-->
+  
+  <div class="wrapper">
+	<div class="student_id_content">
+		<div class="container">
+			<div class="signout">
+				<a href="#"><img src="images/sign_out_btn.png" alt="" style="float:right;"/></a>
+			</div>
+		</div>
+		<h2>Apply for <b>digital identification</b></h2>
+		</br>
+		<p><a href="#">Don’t have?</a> Fill all the details and we will mail you the digital identification number in your mailbox</p>
+	</div>
+	<div class="student_id_forms">
+		<div class="container">
+			<div class="student_success_message">
+				<h3>SUCCESS</h3>
+				<p>You have successfully applied. Digital Identification Number will be mailed to you once it is approved</p>
+				<a class="cmn_student_id_btn" href="#" ng-click="closeTab()">Ok</a>
+			</div>
+		</div>
+	</div>	
+  </div>
+  
+  <!-- Footer Section starts here-->
+  <footer class="footer">©  copyright 2018</footer>
+  <!-- Footer Section ends here--> 
+  
+</div>
+<script type="text/javascript">
+$(function() {
+	$( "#Tabs1" ).tabs(); 
+});
+    </script>
+</body>
+</html>

@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>University Application Review</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link href="css/bootstrap.min.css" rel="stylesheet">
+	<link href="css/style.css" rel="stylesheet">
+	<link href="https://fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet">
+	<link href="https://unpkg.com/ng-table@3.0.1/bundles/ng-table.min.css">
+	<link href="jQueryAssets/jquery.ui.core.min.css" rel="stylesheet" type="text/css">
+	<link href="jQueryAssets/jquery.ui.theme.min.css" rel="stylesheet" type="text/css">
+	<link href="jQueryAssets/jquery.ui.tabs.min.css" rel="stylesheet" type="text/css">
+	<script src="jQueryAssets/jquery-1.11.1.min.js"></script>
+	<script src="jQueryAssets/jquery.ui-1.10.4.tabs.min.js"></script>
+	<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.9/angular.min.js"></script>
+	<script src="https://unpkg.com/ng-table@3.0.1/bundles/ng-table.min.js"></script>
+	<script src="app.js"></script>
+</head>
+
+<body ng-app="myModule" ng-controller="universityReadOnlyForm" ng-init="loadDigitalIdData()">
+<div class="container-fluid"> 
+  
+  <!-- Header Section starts here-->
+	<header class="header_bg">
+		<div class="header_left"></div>
+		<div class="header_right"></div>
+		
+		<div class="container">
+			<div class="logo_pharma">
+				<a href="#"><img src="images/logo.png" alt="logo"/></a>
+			</div>
+			
+			<div class="banner_text_right">
+				Blockchain for Business<br><b>WITH IBM BLOCKCHAIN</b>
+			</div>
+		</div>
+
+	</header> 
+  <!-- Header Section ends here-->
+  
+  <div class="wrapper">
+	<div class="student_id_content">
+		<div class="container">
+			<div class="title_left">
+			  <a href="#" ng-click = "Back()">Back</a><h1>Back</h1>
+			</div>
+			<div class="signout">
+				<a href="#" ng-click = "Logout()"><img src="images/sign_out_btn.png" alt="" style="float:right;"/></a>
+			</div>
+		</div>
+		<h2>Apply for <b>admission to Illinois university</b></h2>
+		<p><a href="#">Don’t have?</a> Fill all the details and we will mail you the application status in your mailbox</p>
+	</div>
+    
+    <!-- Content Section starts here-->
+    <section class="content_area">
+      <div class="container">
+        <div class="col-md-12 cont">
+		  <form>
+			<h2>Applicant Details</h2>
+			<span class="fields_design col-md-4">
+			<label>Legal Name</label>
+			<input type="text" readonly/>
+			</span> 
+			<span class="fields_design col-md-4">
+			<label>SSN</label>
+			<input type="text" readonly/>
+			</span>
+			<span class="fields_design col-md-4">
+			<label>Date of Birth (mm/dd/yyyy)</label>
+			<input type="date" readonly/>
+			</span>
+			<span class="fields_design col-md-4">
+			<div class="select">
+			<label>Gender</label>
+			<input type="text" readonly/>
+			</div>
+			</span>
+			<span class="fields_design col-md-8">
+			<label>Address</label>
+			<textarea style="height:50px;" readonly></textarea>
+			</span>
+			<span class="fields_design col-md-4">
+			<label>Email</label>
+			<input type="text" readonly/>
+			</span>
+			<span class="fields_design col-md-1">
+			<label>Code</label>
+			<input type="text" readonly/>
+			</span>
+			<span class="fields_design col-md-4">
+			<label>Mobile Number</label>
+			<input type="text" readonly/>
+			</span>
+			<div class="clearfix"></div>
+			<h2>Document Details</h2>
+			<span class="fields_design col-md-4">
+			<label>Identification Proof</label>
+			<div class="student_bottom_button">
+				<input class="cmn_admin_approve_btn" type="button" value="Download" ng-click="updateStatus('Approved')">
+			</div>	
+			</span>
+			<div class="clearfix"></div></br>
+			<h2>University Details</h2>
+			<span class="fields_design col-md-4">
+			<label>University Name</label>
+			<input type="text" readonly/>
+			</span> 
+			<span class="fields_design col-md-4">
+			<label>University Address</label>
+			<input type="text" readonly/>
+			</span>
+			<span class="fields_design col-md-4">
+			<label>University Id</label>
+			<input type="text" readonly/>
+			</span> 
+			<span class="fields_design col-md-4">
+			<label>Course</label>
+			<input type="text" readonly/>
+			</span>
+			<span class="fields_design col-md-4">
+			<label>Applying For</label>
+			<input type="text" readonly/>
+			</span>
+			<div class="clearfix"></div></br>
+			<span class="fields_design col-md-4">
+			</span>
+			<span class="fields_design col-md-4">
+			<input type="submit" class="light" value="Approve" ng-click="updateUniversityData('Approved')"/>
+			<input type="submit" class="light" value="Reject" ng-click="updateUniversityData('Approved')"/>
+			</span>
+		  </form>
+        </div>
+      </div>
+    </section>
+    <!-- Content Section ends here--> 
+    
+  </div>
+  
+  <!-- Footer Section starts here-->
+  <footer class="footer">©  copyright 2018</footer>
+  <!-- Footer Section ends here--> 
+  
+</div>
+<script type="text/javascript">
+$(function() {
+	$( "#Tabs1" ).tabs(); 
+});
+</script>
+</body>
+</html>

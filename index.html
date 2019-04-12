@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Digital Id</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link href="css/bootstrap.min.css" rel="stylesheet">
+	<link href="css/style.css" rel="stylesheet">
+	<link href="https://fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet">
+	<link href="https://unpkg.com/ng-table@3.0.1/bundles/ng-table.min.css">
+	<link href="jQueryAssets/jquery.ui.core.min.css" rel="stylesheet" type="text/css">
+	<link href="jQueryAssets/jquery.ui.theme.min.css" rel="stylesheet" type="text/css">
+	<link href="jQueryAssets/jquery.ui.tabs.min.css" rel="stylesheet" type="text/css">
+	<script src="jQueryAssets/jquery-1.11.1.min.js"></script>
+	<script src="jQueryAssets/jquery.ui-1.10.4.tabs.min.js"></script>
+	<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.9/angular.min.js"></script>
+	<script src="https://unpkg.com/ng-table@3.0.1/bundles/ng-table.min.js"></script>
+	<script src="app.js"></script>
+</head>
+
+<body ng-app="myModule" ng-controller="mainPortal">
+<div class="container-fluid"> 
+  
+  <!-- Header Section starts here-->
+  <header class="header_bg">
+    <div class="header_left"></div>
+    <div class="header_right"></div>
+    <div class="container">
+      <div class="logo_pharma"> <a href="#"><img src="images/logo.png" alt="logo"/></a> </div>
+      <div class="banner_text_right"> Blockchain for Business<br>
+        <b>WITH IBM BLOCKCHAIN</b> </div>
+    </div>
+  </header>
+  <!-- Header Section ends here--> 
+  
+  <!-- Content Section ends here-->
+  <div class="home_banner">
+    <div class="container" style="width:1230px;">
+      <div class="block">
+		<div class = "student_banner">
+		<img src="images/student_icon.png" class="banner_img" style = "top: 35px;">
+        <h2 style="color: black; left: 10px; top: -35px;">Student Portal</h2>
+		</div>
+        <p>Requests for Digital Identity and on approval takes an offline exam after which applies for University.  </p>
+        <a href="#" class="block_link" ng-click="studentPortal()">Visit site</a>
+	  </div>
+	  <div class="block">
+		<div class = "university_banner">
+		<img src="images/consortium_icon.png" class="banner_img" style = "top: 35px;">
+        <h2 style="color: black; left: 30px; top: -35px;">Consortium Portal</h2>
+		</div>
+        <p>The admin validates the application submitted by the student and provides Digital Identity. </p>
+        <a href="#" class="block_link" ng-click="consortiumPortal()">Visit site</a>
+	  </div>
+      <div class="block">
+		<div class = "student_banner">
+		<img src="images/assessment_icon.png" class="banner_img" style = "top: 35px;">
+        <h2 style="color: black; left: 30px; top: -35px;">Assessment Portal</h2>
+		</div>
+        <p>The admin reviews the application, validates the Digital Identity and generates registration Id for offline exam. </p>
+        <a href="#" class="block_link" ng-click="skillAssessmentPortal()">Visit site</a>
+	  </div>
+      <div class="block">
+		<div class = "university_banner">
+		<img src="images/university_icon.png" class="banner_img" style = "top: 35px;">
+        <h2 style="color: black; left: 40px; top: -35px;">University Portal</h2>
+		</div>
+        <p>Reviews university application, validates Digital Identity, validates Skill Transcript and confirms admission.  </p>
+        <a href="#" class="block_link" ng-click="universityPortal()">Visit site</a>
+	  </div>
+    </div>
+  </div>
+  <!-- Content Section ends here--> 
+  
+  <!-- Footer Section starts here-->
+  <footer class="footer">©  copyright 2018</footer>
+  <!-- Footer Section ends here--> 
+  
+</div>
+</body>
+</html>

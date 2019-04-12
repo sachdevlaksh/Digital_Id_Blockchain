@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Assessment</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link href="css/bootstrap.min.css" rel="stylesheet">
+	<link href="css/style.css" rel="stylesheet">
+	<link href="https://fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet">
+	<link href="https://unpkg.com/ng-table@3.0.1/bundles/ng-table.min.css">
+	<link href="jQueryAssets/jquery.ui.core.min.css" rel="stylesheet" type="text/css">
+	<link href="jQueryAssets/jquery.ui.theme.min.css" rel="stylesheet" type="text/css">
+	<link href="jQueryAssets/jquery.ui.tabs.min.css" rel="stylesheet" type="text/css">
+	<script src="jQueryAssets/jquery-1.11.1.min.js"></script>
+	<script src="jQueryAssets/jquery.ui-1.10.4.tabs.min.js"></script>
+	<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.9/angular.min.js"></script>
+	<script src="https://unpkg.com/ng-table@3.0.1/bundles/ng-table.min.js"></script>
+	<script src="app.js"></script>
+</head>
+
+<body ng-app="myModule" ng-controller="assessment">
+<div class="container-fluid"> 
+  
+  <!-- Header Section starts here-->
+  <header class="header_bg">
+    <div class="header_left"></div>
+    <div class="header_right"></div>
+    <div class="container">
+      <div class="logo_pharma"> <a href="#"><img src="images/logo.png" alt="logo"/></a> </div>
+      <div class="banner_text_right"> Blockchain for Business<br>
+        <b>WITH IBM BLOCKCHAIN</b> </div>
+    </div>
+  </header>
+  <!-- Header Section ends here-->
+  
+  <div class="wrapper"> 
+    
+    <!-- Content Section starts here-->
+    <section class="content_area">
+      <div class="container">
+        <ol>
+          <li>
+            <div class="question">Grand Central Terminal, Park Avenue, New York is the world's</div>
+            <div class="answer">
+              <ul>
+                <li>
+                  <input type="radio" ng-model="answer1" value="largest railway station">
+                  largest railway station</li>
+                <li>
+                  <input type="radio" ng-model="answer1" value="highest railway station">
+                  highest railway station</li>
+                <li>
+                  <input type="radio" ng-model="answer1" value="longest railway station">
+                  longest railway station</li>
+                <li>
+                  <input type="radio" ng-model="answer1" value="None of the above">
+                  None of the above</li>
+              </ul>
+            </div>
+          </li>
+          <li>
+            <div class="question">Entomology is the science that studies</div>
+            <div class="answer">
+              <ul>
+                <li>
+                  <input type="radio" ng-model="answer2" value="Behavior of human beings">
+                  Behavior of human beings</li>
+                <li>
+                  <input type="radio" ng-model="answer2" value="Insects">
+                  Insects</li>
+                <li>
+                  <input type="radio" ng-model="answer2" value="The origin and history of technical and scientific terms">
+                  The origin and history of technical and scientific terms</li>
+                <li>
+                  <input type="radio" ng-model="answer2" value="The formation of rocks">
+                  The formation of rocks</li>
+              </ul>
+            </div>
+          </li>
+          <li>
+            <div class="question">Eritrea, which became the 182nd member of the UN in 1993, is in the continent of</div>
+            <div class="answer">
+              <ul>
+                <li>
+                  <input type="radio" ng-model="answer3" value="Asia">
+                  Asia</li>
+                <li>
+                  <input type="radio" ng-model="answer3" value="Africa">
+                  Africa</li>
+                <li>
+                  <input type="radio" ng-model="answer3" value="Europe">
+                  Europe</li>
+                <li>
+                  <input type="radio" ng-model="answer3" value="Australia">
+                  Australia</li>
+              </ul>
+            </div>
+          </li>
+        </ol>
+		<div class="clearfix"></div></br>
+		<div class="clearfix"></div></br>
+		<span class="fields_design col-md-4">
+		</span>
+		<span class="fields_design col-md-4">
+		<input type="submit" class="light" value="Submit Assessment" ng-click="submitDigitalIdData()"/>
+		</span>
+      </div>
+    </section>
+    <!-- Content Section ends here--> 
+    
+  </div>
+  
+  <!-- Footer Section starts here-->
+  <footer class="footer">©  copyright 2018</footer>
+  <!-- Footer Section ends here--> 
+  
+</div>
+</body>
+</html>
