@@ -23,8 +23,8 @@ myApp.service('fileUpload', ['$http', function($http) {
   this.uploadFileAndFieldsToUrl = function(file, data, uploadUrl) {
     var fd = new FormData();
     fd.append('file', file);
-	fd.append('data', JSON.stringify(data));
-    return $http({
+    fd.append('data', JSON.stringify(data));
+    $http({
       method: 'POST',
       url: uploadUrl,
       data: fd,
@@ -33,7 +33,11 @@ myApp.service('fileUpload', ['$http', function($http) {
         'Content-Type': undefined
       }
     }).then(function successCallback(response) {
-			return response;
+      if(response.data.success == true && uploadUrl === '/addDigitalDataToDB') {
+        window.location.href = '/digital_id_success.html';
+      } else {
+        alert(response.data.message);
+      }
     });
   }
 }]);
@@ -52,7 +56,7 @@ myApp.controller('mainPortal', ['$scope', 'fileUpload', '$http', '$filter', '$wi
   $scope.skillAssessmentPortal = function() {
     window.open('/assessment_admin_login.html', '_blank');
   }
-  
+
   $scope.universityPortal = function() {
     window.open('/university_admin_login.html', '_blank');
   }
@@ -69,11 +73,11 @@ myApp.controller('studentPortal', ['$scope', 'fileUpload', '$http', '$filter', '
   $scope.addSkillSets = function() {
     window.location.href = '/add_skill_sets.html';
   }
-  
+
   $scope.applyUniversity = function() {
     window.location.href = '/apply_university.html';
   }
-  
+
 }]);
 
 /* Apply For Digital Id Controller */
@@ -82,22 +86,22 @@ myApp.controller('applyDigitalId', ['$scope', 'fileUpload', '$http', '$filter', 
   var uniqueId = Date.now();
 
   $scope.Back = function () {
-	$window.location.href = '/student_portal.html';
+        $window.location.href = '/student_portal.html';
   }
 
   $scope.Logout = function () {
-	window.close();
+        window.close();
   }
-  
+
   var document = {
-	_id : uniqueId + '-IdProof',
-	docName : "",
-	docType : "Identification Proof",
-	digitalId : uniqueId + ''
+        _id : uniqueId + '-IdProof',
+        docName : "",
+        docType : "Identification Proof",
+        digitalId : uniqueId + ''
   }
 
   var digitalIdData = {
-    digitalId: "D-" + uniqueId,
+    digitalId: uniqueId + '',
     fullName: "",
     emailId: "",
     countrycode: "",
@@ -108,15 +112,19 @@ myApp.controller('applyDigitalId', ['$scope', 'fileUpload', '$http', '$filter', 
     createTimestamp: uniqueId,
     dateOfBirth: "",
     documentDetails: document,
-	txnMsg: ""
+	universityDetails: "",
+	assessmentDetails: "",
+	selectedSkillSet: "", 
+    txnMsg: ""
   };
 
   var applicantData = {
     _id: uniqueId + '',
     digitalIdInfo: digitalIdData,
-    digitalIdStatus: false,
-    universityAdmissionStatus: false,
+    digitalIdStatus: 'Pending',
+    universityAdmissionStatus: 'Pending',
     currentDegreeStatus: false,
+	skillSetStatus : false,
 	ssn: "",
 	message: "",
 	txnMsg: ""
@@ -146,19 +154,57 @@ myApp.controller('applyDigitalId', ['$scope', 'fileUpload', '$http', '$filter', 
 myApp.controller('addSkillSets', ['$scope', 'fileUpload', '$http', '$filter', '$window', function($scope, fileUpload, $http, $filter, $window) {
 
   $scope.on = function () {
-	document.getElementById("overlay").style.display = "block";	  
+        document.getElementById("overlay").style.display = "block";
   }
 
   $scope.off = function () {
-	document.getElementById("overlay").style.display = "none";	  
+        document.getElementById("overlay").style.display = "none";
   }
 
   $scope.Back = function () {
-	$window.location.href = '/student_portal.html';
+        $window.location.href = '/student_portal.html';
   }
-  
+
   $scope.technicalSkills = ["Big Data Analysis", "Coding and Programming", "Project Management", "Social Media Experience", "Technical Writing"];
   
+  $scope.loadDigitalIdData = function() {
+        var data = {
+          _id : $scope.digitalId
+        }
+
+    $http({
+      method: 'POST',
+      url: '/getDigitalIdData',
+      data: data
+    }).then(function successCallback(response) {
+      if(response.data.success == true && response.data.result[0].digitalIdStatus === "Approved" && !response.data.result[0].skillSetStatus) {
+		$scope.digitalIdData = response.data.result[0];
+		$scope.dob = new Date(response.data.result[0].digitalIdInfo.dateOfBirth);
+		$scope.off();
+      } else {
+        alert("You have already applied for skill sets.");
+        window.close();
+      }
+    });
+  }
+  
+    $scope.updateDigitalIdData = function () {
+        var message = $scope.digitalIdData.message + " The applicant has added his skillsets successfully.";
+        $scope.digitalIdData.message = message;
+
+		$http({
+		  method: 'POST',
+		  url: '/updateDigitalIdData',
+		  data: $scope.digitalIdData
+		}).then(function successCallback(response) {
+		  if(response.data.success == true) {
+			$window.location.href = '/skill_set_add_success.html';
+		  } else {
+			alert(response.data.message);
+		  }
+		});
+  }
+
 }]);
 
 
@@ -166,50 +212,46 @@ myApp.controller('addSkillSets', ['$scope', 'fileUpload', '$http', '$filter', '$
 myApp.controller('applyUniversity', ['$scope', 'fileUpload', '$http', '$filter', '$window', function($scope, fileUpload, $http, $filter, $window) {
 
   $scope.Back = function () {
-	$window.location.href = '/student_portal.html';
+        $window.location.href = '/student_portal.html';
   }
-  
+
   $scope.on = function () {
-	document.getElementById("overlay").style.display = "block";	  
+        document.getElementById("overlay").style.display = "block";
   }
 
   $scope.off = function () {
-	document.getElementById("overlay").style.display = "none";	  
+        document.getElementById("overlay").style.display = "none";
   }
-  
+
   $scope.loadDigitalIdData = function() {
-	var data = {
-	  _id : $scope.digitalId
-	}
-	
+        var data = {
+          _id : $scope.digitalId
+        }
+
     $http({
       method: 'POST',
       url: '/getDigitalIdData',
-	  data: data
+          data: data
     }).then(function successCallback(response) {
       if(response.data.success == true) {
-		$scope.digitalIdData = response.data.result[0];
-		$scope.dob = new Date(response.data.result[0].digitalIdInfo.dateOfBirth);
-		$scope.off();
+                $scope.digitalIdData = response.data.result[0];
+                $scope.dob = new Date(response.data.result[0].digitalIdInfo.dateOfBirth);
+                $scope.off();
       } else {
         alert(response.data.message);
-		window.close();
+                window.close();
       }
-    });	  
+    });
   }
 
   $scope.addUniversityData = function() {
 
   }
-  
+
 }]);
 
-/* Digital Id Admin Login Controller */
-myApp.controller('digitalIdAdminLogin', ['$scope', 'fileUpload', '$http', '$filter', '$window', function($scope, fileUpload, $http, $filter, $window) {
-	
-  $scope.courses = ["Ancient History", "Micro Services", "Computer Science"];
-  
-  $scope.degreeType = ["Under Graduate", "Post Graduate"];
+/* Consortium Admin Login Controller */
+myApp.controller('consortiumAdminLogin', ['$scope', 'fileUpload', '$http', '$filter', '$window', function($scope, fileUpload, $http, $filter, $window) {
 
   $scope.verifyLogin = function() {
 
@@ -224,7 +266,7 @@ myApp.controller('digitalIdAdminLogin', ['$scope', 'fileUpload', '$http', '$filt
       data: data
     }).then(function successCallback(response) {
       if(response.data.success == true) {
-        window.location.href = '/digital_id_admin.html';
+        window.location.href = '/consortium_admin.html';
       } else {
         alert(response.data.message);
       }
@@ -239,7 +281,7 @@ myApp.controller('universityAdminLogin', ['$scope', 'fileUpload', '$http', '$fil
   $scope.verifyLogin = function() {
 
     var data = {
-      userId: $scope.username,
+      username: $scope.username,
       password: $scope.password
     }
 
@@ -258,6 +300,31 @@ myApp.controller('universityAdminLogin', ['$scope', 'fileUpload', '$http', '$fil
 
 }]);
 
+/* Assessment Admin Login Controller */
+myApp.controller('assessmentAdminLogin', ['$scope', 'fileUpload', '$http', '$filter', '$window', function($scope, fileUpload, $http, $filter, $window) {
+
+  $scope.verifyLogin = function() {
+
+    var data = {
+      username: $scope.username,
+      password: $scope.password
+    }
+
+    $http({
+      method: 'POST',
+      url: '/verifyLogin',
+      data: data
+    }).then(function successCallback(response) {
+      if(response.data.success == true) {
+        window.location.href = '/assessment_admin.html';
+      } else {
+        alert(response.data.message);
+      }
+    });
+  }
+
+}]);
+
 /* University Success Controller */
 myApp.controller('universityAdmin', ['$scope', 'fileUpload', '$http', '$filter', '$window', function($scope, fileUpload, $http, $filter, $window) {
 
@@ -267,28 +334,28 @@ myApp.controller('universityAdmin', ['$scope', 'fileUpload', '$http', '$filter',
       url: '/getUniversityApplicantRequests'
     }).then(function successCallback(response) {
       if(response.data.success == true) {
-		$scope.tableData = response.data.result;
-		$scope.tableParams = new NgTableParams({
-			count: 4
-		}, {
-			counts: [],
-			dataset: $scope.tableData
-		});       
+                $scope.tableData = response.data.result;
+                $scope.tableParams = new NgTableParams({
+                        count: 4
+                }, {
+                        counts: [],
+                        dataset: $scope.tableData
+                });
       } else {
         alert(response.data.message);
       }
-    });	  
+    });
   }
 
   $scope.selectedDigitalId = function(digitalId) {
-	$window.sessionStorage.setItem("_id", digitalId);					
-	$window.location.href = '/university_read_only.html';
+        $window.sessionStorage.setItem("_id", digitalId);
+        $window.location.href = '/university_read_only.html';
   }
-  
+
 }]);
 
-/* University Success Controller */
-myApp.controller('digitalIdAdmin', ['$scope', '$http', '$window', 'NgTableParams', function($scope, $http, $window, NgTableParams) {
+/* Consortium Admin DigitalId Requests Form Controller */
+myApp.controller('consortiumAdmin', ['$scope', '$http', '$window', 'NgTableParams', function($scope, $http, $window, NgTableParams) {
 
   $scope.getDigitalIdRequests = function() {
     $http({
@@ -296,150 +363,257 @@ myApp.controller('digitalIdAdmin', ['$scope', '$http', '$window', 'NgTableParams
       url: '/getDigitalIdRequests'
     }).then(function successCallback(response) {
       if(response.data.success == true) {
+                $scope.tableData = response.data.result;
+                $scope.tableParams = new NgTableParams({
+                        count: 4
+                }, {
+                        counts: [],
+                        dataset: $scope.tableData
+                });
+      } else {
+        alert(response.data.message);
+      }
+    });
+  }
+
+  $scope.selectedDigitalId = function(digitalId) {
+        $window.sessionStorage.setItem("_id", digitalId);
+        $window.location.href = '/digital_id_read_only.html';
+  }
+
+  $scope.Logout = function () {
+        window.close();
+  }
+
+}]);
+
+/* Assessment Admin Skill Set Requests Form Controller */
+myApp.controller('assessmentAdmin', ['$scope', '$http', '$window', 'NgTableParams', function($scope, $http, $window, NgTableParams) {
+
+  $scope.getDigitalIdRequestsForAssessment = function() {
+    $http({
+      method: 'GET',
+      url: '/getDigitalIdRequestsForAssessment'
+    }).then(function successCallback(response) {
+      if(response.data.success == true) {
 		$scope.tableData = response.data.result;
 		$scope.tableParams = new NgTableParams({
 			count: 4
 		}, {
 			counts: [],
 			dataset: $scope.tableData
-		});       
+		});
       } else {
         alert(response.data.message);
       }
-    });	  
+    });
   }
 
   $scope.selectedDigitalId = function(digitalId) {
-	$window.sessionStorage.setItem("_id", digitalId);					
-	$window.location.href = '/digital_id_read_only.html';
-  }  
-  
+        $window.sessionStorage.setItem("_id", digitalId);
+        $window.location.href = '/add_skill_sets_read_only.html';
+  }
+
+  $scope.Logout = function () {
+        window.close();
+  }
+
 }]);
 
 /* Digital Id Read Only Form Controller */
 myApp.controller('digitalIdReadOnlyForm', ['$scope', 'fileUpload', '$http', '$filter', '$window', function($scope, fileUpload, $http, $filter, $window) {
 
   var data = {
-	_id : $window.sessionStorage.getItem("_id") 
+        _id : $window.sessionStorage.getItem("_id")
   }
 
   $scope.loadDigitalIdData = function() {
     $http({
       method: 'POST',
       url: '/getDigitalIdData',
-	  data: data
+          data: data
     }).then(function successCallback(response) {
       if(response.data.success == true) {
-		$scope.digitalIdData = response.data.result[0];
-		$scope.dob = new Date(response.data.result[0].digitalIdInfo.dateOfBirth);
+                $scope.digitalIdData = response.data.result[0];
+                $scope.dob = new Date(response.data.result[0].digitalIdInfo.dateOfBirth);
       } else {
         alert(response.data.message);
       }
-    });	  
+    });
   }
-  
+
   $scope.updateDigitalIdData = function (buttonValue) {
-	var message = $scope.digitalIdData.message + " The digital id request has been " + buttonValue + ".";
-	$scope.digitalIdData.message = message;
-	
-	if(buttonValue == "Approved")
-		$scope.digitalIdData.digitalIdStatus = true;
-	
+        var message = $scope.digitalIdData.message + " The digital id request has been " + buttonValue + ".";
+        $scope.digitalIdData.message = message;
+
+        if(buttonValue == "Approved")
+            $scope.digitalIdData.digitalIdStatus = "Approved";
+		
+		if(buttonValue == "Rejected")
+            $scope.digitalIdData.digitalIdStatus = "Rejected";
+
     $http({
       method: 'POST',
       url: '/updateDigitalIdData',
-	  data: $scope.digitalIdData
+          data: $scope.digitalIdData
     }).then(function successCallback(response) {
       if(response.data.success == true) {
-		$window.location.href = '/digital_id_admin.html';       
+            $window.location.href = '/consortium_admin.html';
       } else {
         alert(response.data.message);
       }
-    });	  
+    });
   }
 
   $scope.Back = function () {
-	$window.location.href = '/digital_id_admin.html';
+        $window.location.href = '/consortium_admin.html';
   }
 
   $scope.Logout = function () {
-	window.close();
+        window.close();
   }
-   
+
+}]);
+
+/* Skill Set Read Only Form Controller */
+myApp.controller('skillSetReadOnlyForm', ['$scope', 'fileUpload', '$http', '$filter', '$window', function($scope, fileUpload, $http, $filter, $window) {
+
+  var data = {
+        _id : $window.sessionStorage.getItem("_id")
+  }
+
+  $scope.loadDigitalIdData = function() {
+    $http({
+      method: 'POST',
+      url: '/getDigitalIdData',
+          data: data
+    }).then(function successCallback(response) {
+      if(response.data.success == true) {
+			$scope.digitalIdData = response.data.result[0];
+			$scope.dob = new Date(response.data.result[0].digitalIdInfo.dateOfBirth);
+      } else {
+        alert(response.data.message);
+      }
+    });
+  }
+
+  $scope.updateDigitalIdData = function (buttonValue) {
+		var uniqueId = Date.now();
+		var assessmentDetails = { registrationId: uniqueId+'', assessmentUserAnswer: '', assessmentScore: '', digitalId: $scope.digitalIdData.digitalIdInfo.digitalId, assessmentDocument: '' } ;
+        var message = $scope.digitalIdData.message + " The skill set based as per your profile has been " + buttonValue + " and you will be mailed further details.";
+        $scope.digitalIdData.message = message;
+		$scope.digitalIdData.digitalIdInfo.assessmentDetails = assessmentDetails;
+
+        if(buttonValue == "Approved")
+            $scope.digitalIdData.skillSetStatus = "Approved";
+		
+		if(buttonValue == "Rejected")
+            $scope.digitalIdData.skillSetStatus = "Rejected";
+
+    $http({
+      method: 'POST',
+      url: '/updateDigitalIdData',
+      data: $scope.digitalIdData
+    }).then(function successCallback(response) {
+      if(response.data.success == true) {
+            $window.location.href = '/assessment_admin.html';
+      } else {
+        alert(response.data.message);
+      }
+    });
+  }
+
+  $scope.Back = function () {
+        $window.location.href = '/assessment_admin.html';
+  }
+
+  $scope.Logout = function () {
+        window.close();
+  }
+
 }]);
 
 /* Digital Id Read Only Form Controller */
 myApp.controller('universityReadOnlyForm  ', ['$scope', 'fileUpload', '$http', '$filter', '$window', function($scope, fileUpload, $http, $filter, $window) {
 
   var data = {
-	_id : $window.sessionStorage.getItem("_id") 
+        _id : $window.sessionStorage.getItem("_id")
   }
 
   $scope.loadDigitalIdData = function() {
     $http({
       method: 'POST',
       url: '/getDigitalIdData',
-	  data: data
+          data: data
     }).then(function successCallback(response) {
       if(response.data.success == true) {
-		$scope.digitalIdData = response.data.result[0];
-		$scope.dob = new Date(response.data.result[0].digitalIdInfo.dateOfBirth);
+                $scope.digitalIdData = response.data.result[0];
+                $scope.dob = new Date(response.data.result[0].digitalIdInfo.dateOfBirth);
       } else {
         alert(response.data.message);
       }
-    });	  
+    });
   }
-  
+
   $scope.updateDigitalIdData = function (buttonValue) {
-	var message = $scope.digitalIdData.message + " The university admission request has been " + buttonValue + ".";
-	$scope.digitalIdData.message = message;
-	
-	if(buttonValue == "Approved")
-		$scope.digitalIdData.universityAdmissionStatus = true;
-	
+        var message = $scope.digitalIdData.message + " The university admission request has been " + buttonValue + ".";
+        $scope.digitalIdData.message = message;
+
+        if(buttonValue == "Approved")
+                $scope.digitalIdData.universityAdmissionStatus = true;
+
     $http({
       method: 'POST',
       url: '/updateDigitalIdData',
-	  data: $scope.digitalIdData
+          data: $scope.digitalIdData
     }).then(function successCallback(response) {
       if(response.data.success == true) {
-		$window.location.href = '/university_admin.html';       
+                $window.location.href = '/university_admin.html';
       } else {
         alert(response.data.message);
       }
-    });	  
+    });
   }
 
   $scope.Back = function () {
-	$window.location.href = '/university_admin.html';
+        $window.location.href = '/university_admin.html';
   }
 
   $scope.Logout = function () {
-	window.close();
+        window.close();
   }
-  
+
 }]);
 
 /* Assessment Controller */
 myApp.controller('assessment', ['$scope', 'fileUpload', '$http', '$filter', '$window', function($scope, fileUpload, $http, $filter, $window) {
 
-  
+
 }]);
 
 /* University Success Controller */
 myApp.controller('universitySuccess', ['$scope', 'fileUpload', '$http', '$filter', '$window', function($scope, fileUpload, $http, $filter, $window) {
 
   $scope.closeTab = function() {
-	window.close();
+        window.close();
   }
-  
+
 }]);
 
 /* Digital Id Success Controller */
 myApp.controller('digitalIdSuccess', ['$scope', 'fileUpload', '$http', '$filter', '$window', function($scope, fileUpload, $http, $filter, $window) {
 
   $scope.closeTab = function() {
-	window.close();
+        window.close();
+  }
+
+}]);
+
+/* Add Skill Set Success Controller */
+myApp.controller('skillSetSuccess', ['$scope', 'fileUpload', '$http', '$filter', '$window', function($scope, fileUpload, $http, $filter, $window) {
+
+  $scope.closeTab = function() {
+        window.close();
   }
 
 }]);
