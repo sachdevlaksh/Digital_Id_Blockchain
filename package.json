@@ -8,6 +8,7 @@
     "start": "node server.js"
   },
   "dependencies": {
+    "@cloudant/cloudant": "^4.0.0",
     "body-parser": "^1.18.3",
     "cloudant": "^1.10.0-NOTICE",
     "express": "^4.16.3",

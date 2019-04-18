@@ -17,7 +17,7 @@
 	<script src="app.js"></script>
 </head>
 
-<body ng-app="myModule" ng-controller="universityAdmin" ng-init="getAdmissionRequests()">
+<body ng-app="myModule" ng-controller="universityAdmin" ng-init="getUniversityApplicantRequests()">
 <div class="container-fluid"> 
   
   <!-- Header Section starts here-->
@@ -59,18 +59,18 @@
 					  <tr>
 					  <th>Request ID</th>
 					  <th>Digital ID</th>
-					  <th>Request Date</th>
+					  <th>University Name</th>
 					  <th>Applicant Name</th>
 					  <th>Course Applied</th>
-					  <th>Application Status</th>
+					  <th>Degree Type</th>
 					  </tr>
 					  <tr ng-repeat="x in $data">
-						<td ng-click="showDigitalIdForm(x._id)"><a ng-href="#">REQ-00{{ $index + 1 }}</a></td>
+						<td ng-click="selectedDigitalId(x._id)"><a ng-href="#">REQ-00{{ $index + 1 }}</a></td>
 						<td>{{ x.digitalIdInfo.digitalId }}</td>
-						<td>{{ x.digitalIdInfo.createTimestamp | date:'yyyy-MM-dd' }}</td>
+						<td>{{ x.digitalIdInfo.universityDetails.universityName }}</td>
 						<td>{{ x.digitalIdInfo.fullName }}</td>
-						<td>{{ x.digitalIdStatus }}</td>
-						<td>{{ x.digitalIdStatus }}</td>
+						<td>{{ x.digitalIdInfo.universityDetails.courseAppliedFor }}</td>
+						<td>{{ x.digitalIdInfo.universityDetails.appliedDegreeType }}</td>
 					  </tr>
 				  </table>
 				</span>

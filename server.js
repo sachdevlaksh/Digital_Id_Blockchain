@@ -8,6 +8,7 @@ var nano = require('nano')('http://localhost:' + port);
 var app = express();
 var multer = require('multer');
 var nodemailer = require('nodemailer');
+var Cloudant = require('@cloudant/cloudant');
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({
   extended: true
@@ -21,10 +22,8 @@ app.use('/', express.static(__dirname + '/images'));
 
 var cloudantUserName = '97db821e-87a4-4507-b8ee-fcc95b72b447-bluemix';
 var cloudantPassword = 'ae34609f865eac5720a3e08c9c0208840a9418090a98f9a4c1fcb9fa5573040b';
-var dbCredentials_url = 'https://' + cloudantUserName + ':' + cloudantPassword + '@' + cloudantUserName + '.cloudant.com'; // Set this to your own account
-
-//Initialize the library with my account
-var cloudant = require('cloudant')(dbCredentials_url);
+var cloudant_url = 'https://' + cloudantUserName + ':' + cloudantPassword + '@' + cloudantUserName + '.cloudant.com'; // Set this to your own account
+var cloudant = Cloudant(cloudant_url);
 
 var dbForLogin = cloudant.db.use('digital_id_login_details');
 var dbForApplicantData = cloudant.db.use('digital_id_applicant_data');
@@ -85,256 +84,235 @@ dbForApplicantData.index(digitalId, function(er, response) {
 app.post('/verifyLogin', function(req, res) {
 	console.log('Inside Express api check for login');
 	console.log('Received login details : ' + JSON.stringify(req.body));
-    var userName = req.body.username;
-    var password = req.body.password;
-    dbForLogin.get(userName, function(err, body) {
-        if (!err) {
-            var dbPassword = body.agentPassword;
-            if (dbPassword === password) {
-				console.log('User verification successful');
-				res.json({ success: true, message: 'User Authentication Successful' });
-            } else {
-				console.log('Error finding user Information from db ' + err);
-				res.json({ success: false, message: 'Invalid User name/Password !' });
-            }
-        } else {
-			  console.log('User name not found !');
-			  res.json({ success: false, message: 'User name not found !' });
-		}
-    });
+	verifyCredentialsFromCloudant(req.body.username, req.body.password).then(function(data) {
+	if(data.success){
+		res.json ({success : true, message:'User name verified with password successfully !'});
+	}else
+		res.json ({success : false, message:'User name not found !'});
+	});
 });
 
 //Add digital Id data to DB
 app.post('/addDigitalDataToDB', type, function(req, res) {
   console.log('Inside Express api to insert data for applicant');
-  console.log('Received applicant details : ' + JSON.parse(JSON.stringify(req.body.data)));
-  console.log('Recieved file details : ' + JSON.stringify(req.file));
   var applicantData = JSON.parse(JSON.stringify(req.body.data));
   applicantData = JSON.parse(applicantData);
 
-  fs.readFile(__dirname + '/upload/' + req.file.filename, function(err, data) {
-          dbForApplicantData.find({ selector: { ssn: applicantData.ssn } }, function(er, result) {
-                if(er) {
-                  console.log('Issue fetching SSN from DB ! ' + er);
-                  res.json({ success: false, message: 'Error : ' + er });
-                }
-                if(result && result.docs && result.docs.length > 0) {
-                  console.log('SSN already exists in DB !');
-                  res.json({ success: false, message: 'SSN already exists in DB !'});
-                } else {
-                  console.log('SSN does not exists in DB !');
-                  dbForApplicantData.insert(applicantData, function(err, body) {
-                        if(!err) {
-                          console.log(body);
-                          dbForApplicantDocs.insert(applicantData.digitalIdInfo.documentDetails, function(err, body) {
-                                if(!err) {
-                                  console.log(body);
-                                  dbForApplicantDocs.attachment.insert(body.id, req.file.originalname, data, req.file.mimetype, { rev: body.rev }, function(err, body) {
-                                        if(!err) {
-                                          fs.unlink(__dirname + '/upload/' + req.file.filename, function(err) {
-                                                if(!err)
-                                                  console.log('File deleted !');
-                                                else
-                                                  console.log('Issue deleting File');
-                                          });
-                                          console.log('Document uploaded successfully !');
-                                          res.send({ success: true, message: 'Document uploaded successfully !' });
-                                        } else {
-                                          console.log('Document upload issue !');
-                                          res.send({ success: false, message: 'Document upload issue !' });
-                                        }
-                                  });
-                                } else {
-                                  console.log('Applicant data insertion issue ! ' + err);
-                                  res.send({ success: false, message: 'Applicant data insertion issue !' });
-                                }
-                          });
-                        } else {
-                          console.log('Applicant data insertion issue ! ' + err);
-                          res.send({ success: false, message: 'Applicant data insertion issue !' });
-                        }
-                  });
-                }
-          });
+  fs.readFile(__dirname + '/upload/' + req.file.filename, function(err, response) {
+	insertCloudantData(applicantData).then(function(data) {
+	if(data.success){
+		insertDocInCloudant(response, req.file, applicantData.digitalIdInfo.documentDetails).then(function(data) {
+		if(data.success){
+			fs.unlink(__dirname + '/upload/' + req.file.filename, function(err) {
+				if(!err)
+				  console.log('File deleted !');
+				else
+				  console.log('Issue deleting File');
+			});
+			res.json ({success : true, message:'Applicant data and document inserted successfully !'});
+		}else
+			res.json ({success : false, message:'Issue inserting applicant document !'});
+		});
+	}else
+		res.json ({success : false, message:'Issue inserting applicant data !'});
+	});
   });
 });
 
 //Get all digital Ids with digital Id status as 'PENDING'
 app.get('/getDigitalIdRequests', function(req, res) {
   console.log('Inside Express api check to get all applicants details for digital Id');
-  dbForApplicantData.find({ selector: { digitalIdStatus: 'Pending' } }, function(er, result) {
-    if(er) {
-      console.log('Error finding applicant information from db ' + er);
-      res.json({ success: false, message: 'Error : ' + er });
-    }
-    if(result && result.docs && result.docs.length > 0) {
-      console.log('Data found !');
-      res.json({ success: true, message: 'Data found !', result: result.docs });
-    } else {
-      console.log('Data not found !');
-      res.json({ success: false, message: 'Data not found !' });
-    }
-  });
+	digitalIdWithPendingStatus().then(function(data) {
+	if(data.success){
+		res.json ({success : true, message:'Data found successfully ! ', result: data.result.docs});
+	}else
+		res.json ({success : false, message:'Cloudant db connectivity issue !'});
+	});  
 });
 
-//Get all digital Ids with digital Id status as 'Approved' and universityStatus as 'Pending'
+//Get all digital Ids with skill set status as 'Pending'
 app.get('/getDigitalIdRequestsForAssessment', function(req, res) {
-  var response ;
-  console.log('Inside Express api check to get all applicants details for digital Id');
-  dbForApplicantData.find({ selector: { digitalIdStatus: 'Approved' } }, function(er, result) {
-    if(er) {
-      console.log('Error finding applicant information from db ' + er);
-      res.json({ success: false, message: 'Error : ' + er });
-    }
-    if(result && result.docs && result.docs.length > 0) {
-      console.log('Data found !'+ JSON.stringify(result.docs));
-	  for(var i=0; i<result.docs.length; i++){
-		if(result.docs[i].universityAdmissionStatus === 'Pending' && result.docs[i].skillSetStatus === 'Pending')
-			response = response.push(result.docs[i]);
-	  }
-      res.json({ success: true, message: 'Data found !', result: response });
-    } else {
-      console.log('Data not found !');
-      res.json({ success: false, message: 'Data not found !' });
-    }
-  });
+  console.log('Inside Express api check to get all applicants details with skillset status pending');
+	digitalIdWithPendingSkillSetStatus().then(function(data) {
+	if(data.success){
+		res.json ({success : true, message:'Data found successfully ! ', result: data.result});
+	}else
+		res.json ({success : false, message:'Cloudant db connectivity issue !'});
+	});
 });
 
 //Get all digital Ids with university application status as 'PENDING'
 app.get('/getUniversityApplicantRequests', function(req, res) {
   console.log('Inside Express api check to get all applicants details for university applications');
-  dbForApplicantData.find({ selector: { universityAdmissionStatus: 'Pending' } }, function(er, result) {
-    if(er) {
-      console.log('Error finding applicant information from db ' + er);
-      res.json({ success: false, message: 'Error : ' + er });
-    }
-    if(result && result.docs && result.docs.length > 0) {
-      console.log('Data found !');
-      res.json({ success: true, message: 'Data found !', result: result.docs });
-    } else {
-      console.log('Data not found !');
-      res.json({ success: false, message: 'Data not found !' });
-    }
-  });
+	digitalIdWithPendingUniversityAdmissionStatus().then(function(data) {
+	if(data.success){
+		res.json ({success : true, message:'Data found successfully ! ', result: data.result});
+	}else
+		res.json ({success : false, message:'Cloudant db connectivity issue !'});
+	});
 });
 
 //Get selected _id details from DB
 app.post('/getDigitalIdData', function(req, res) {
   console.log('Inside Express api check to get digital Id data : ' +req.body._id);
-/*   var transporter = nodemailer.createTransport({
-	  service: 'gmail',
-	  auth: {
-		user: 'youremail@gmail.com',
-		pass: 'yourpassword'
-	  }
-  });
-  
-  var mailOptions = {
-	  from: 'youremail@gmail.com',
-	  to: 'myfriend@yahoo.com',
-	  subject: 'Sending Email using Node.js',
-	  text: 'That was easy!'
-  }; */
-  
-  dbForApplicantData.find({ selector: { _id: req.body._id } }, function(er, result) {
-    if(er) {
-      console.log('Error finding applicant information from db ' + er);
-      res.json({ success: false, message: 'Error : ' + er });
-    }
-    if(result && result.docs && result.docs.length > 0) {
-      console.log('Data found !');
-      res.json({ success: true, message: 'Data found !', result: result.docs });
-    } else {
-      console.log('Data not found !');
-      res.json({ success: false, message: 'Data not found !' });
-    }
-  });
+	getDigitalIdData(req.body._id).then(function(data) {
+	if(data.success){
+		res.json ({success : true, message:'Applicant data found successfully ! ', result: data.response.docs});
+	}else
+		res.json ({success : false, message:'Cloudant db connectivity issue !'});
+	});
 });
 
 //Update digital Id applicant details to DB
 app.post('/updateDigitalIdData', function(req, res) {
-  console.log('Inside Express api check to update digital Id data : ' +JSON.stringify(req.body));
+  console.log('Inside Express api check to update digital Id data ! ');
   var applicantData = JSON.parse(JSON.stringify(req.body));
-   dbForApplicantData.insert(applicantData, function(err, body) {
-        if(!err) {		
-          console.log('Applicant data updated successfully ! ' + err);
-/* 		  transporter.sendMail(mailOptions, function(error, info){
-			  if (error) {
-				console.log(error);
-			  } else {
-				console.log('Email sent: ' + info.response);
-			  }
-		  }); */
-          res.send({ success: true, message: 'Applicant data updated successfully ! ' });
-          } else {
-          console.log('Applicant data updation issue ! ' + err);
-          res.send({ success: false, message: 'Applicant data updation issue !' });
-        }
-  });
+	updateCloudantData(applicantData).then(function(data) {
+	if(data.success){
+		res.json ({success : true, message:'Applicant data updated successfully ! '});
+	}else
+		res.json ({success : false, message:'Applicant data updation issue !'});
+	});
 });
+
+//Fetch specific digitalId record from cloudant DB
+var getDigitalIdData = async (digitalId) => {
+	try{
+		var response = await dbForApplicantData.find({ selector: { _id: digitalId } });
+		console.log('Applicant data found successfully ! ');
+        return({ success: true, message: 'Applicant data found successfully ! ', response: response });
+	}catch(err) {		
+        console.log('Applicant data not present/DB issue ! ' + err);
+        return({ success: false, message: 'Applicant data not present/DB issue !' });
+    }		
+}
 
 // Update existence record in cloudant DB
 var updateCloudantData = async (data) => {
-   dbForApplicantData.insert(data, function(err, body) {
-        if(!err) {		
-          console.log('Applicant data updated successfully ! ' + err);
-          return({ success: true, message: 'Applicant data updated successfully ! ' });
-        } else {
-          console.log('Applicant data updation issue ! ' + err);
-          return({ success: false, message: 'Applicant data updation issue !' });
-        }
-  });		
+	try{
+		var response = await dbForApplicantData.insert(data);
+		console.log('Applicant data updated successfully ! ');
+        return({ success: true, message: 'Applicant data updated successfully ! ' });
+	}catch(err) {		
+        console.log('Applicant data updation issue ! ' + err);
+        return({ success: false, message: 'Applicant data updation issue !' });
+    }		
+}
+
+// Fetch all digital Ids with pending digitalId status from cloudant DB
+var digitalIdWithPendingStatus = async () => {
+	try{
+		var response = await dbForApplicantData.find({ selector: { digitalIdStatus: 'Pending' } });
+		if(response && response.docs && response.docs.length > 0) {
+		  console.log('Data found !');
+		  return({ success: true, message: 'Data found !', result: response });
+		} else {
+		  console.log('Data not found !');
+		  return({ success: false, message: 'Data not found !' });
+		}    
+	}catch(err) {
+      console.log('Error finding details from db !' + err);
+      return({ success: false, message: 'Error finding details from db !'});
+    }		
+}
+
+// Fetch all digital Ids with pending skillSetStatus status from cloudant DB
+var digitalIdWithPendingSkillSetStatus = async () => {
+var finaldigitalIds = new Array();
+	try{
+		var response = await dbForApplicantData.find({ selector: { skillSetStatus: 'Pending' } });
+		if(response && response.docs && response.docs.length > 0) {
+		  console.log('Data found !');
+		  for(var i=0; i<response.docs.length; i++){
+			if(response.docs[i].digitalIdStatus === 'Approved' && response.docs[i].universityAdmissionStatus === 'Pending'){
+				finaldigitalIds.push(response.docs[i]);
+			}
+		  }
+		  return({ success: true, message: 'Data found !', result: finaldigitalIds });
+		} else {
+		  console.log('Data not found !');
+		  return({ success: false, message: 'Data not found !' });
+		}    
+	}catch(err) {
+      console.log('Error finding details from db !' + err);
+      return({ success: false, message: 'Error finding details from db !'});
+    }
+}
+
+// Fetch all digital Ids with pending universityAdmission status from cloudant DB
+var digitalIdWithPendingUniversityAdmissionStatus = async () => {
+var finaldigitalIds = new Array();
+	try{
+		var response = await dbForApplicantData.find({ selector: { universityAdmissionStatus: 'Pending' } });
+		if(response && response.docs && response.docs.length > 0) {
+		  console.log('Data found !');
+		  for(var i=0; i<response.docs.length; i++){
+			if(response.docs[i].digitalIdStatus === 'Approved' && response.docs[i].skillSetStatus === 'Approved'){
+				finaldigitalIds.push(response.docs[i]);
+			}
+		  }
+		  return({ success: true, message: 'Data found !', result: finaldigitalIds });
+		} else {
+		  console.log('Data not found !');
+		  return({ success: false, message: 'Data not found !' });
+		}    
+	}catch(err) {
+      console.log('Error finding details from db !' + err);
+      return({ success: false, message: 'Error finding details from db !'});
+    }
+}
+
+// Verify admin login credentials from cloudant DB
+var verifyCredentialsFromCloudant = async (username, password) => {
+	try{
+		var response = await dbForLogin.get(username);
+		console.log('Data found in db for the requested username');
+		if (response.agentPassword === password) {
+			console.log('User verification successful');
+			return({ success: true, message: 'User Authentication Successful !' });
+		} else {
+			console.log('Invalid User name/Password ');
+			return({ success: false, message: 'Invalid User name/Password !' });
+		}
+	}catch (err){
+		console.log('Data not found in db for the requested username !' + err);
+		return({ success: false, message: 'Data not found in db for the requested username !'});
+	}
 }
 
 // Insert data/record in cloudant DB
 var insertCloudantData = async (data) => {
-  dbForApplicantData.find({ selector: { ssn: data.ssn } }, function(er, result) {
-		if(er) {
-		  console.log('Issue fetching SSN from DB ! ' + er);
-		  return({ success: false, message: 'Error : ' + er });
-		}else if(result && result.docs && result.docs.length > 0) {
+	try{
+		var response =  await dbForApplicantData.find({ selector: { ssn: data.ssn } });
+		if(response && response.docs && response.docs.length > 0){
 		  console.log('SSN already exists in DB !');
-		  return({ success: false, message: 'SSN already exists in DB !'});
-		}else {
+		  return({ success: false, message: 'SSN already exists in DB !'});		
+		}else{
 		  console.log('SSN does not exists in DB !');
-		  dbForApplicantData.insert(data, function(err, body) {
-			if(!err) {
-			  console.log('Applicant Data Inserted !' + body);
-			  return({ success: true, message: 'Applicant Data Inserted Successfully !'});
-			} else {
-			  console.log('Applicant data insertion issue ! ' + err);
-			  return({ success: false, message: 'Applicant data insertion issue !' });
-			}
-		  });
+		  var data = await dbForApplicantData.insert(data);
+		  console.log('Applicant Data Inserted !');
+		  return({ success: true, message: 'Applicant Data Inserted Successfully !'});		  
 		}
-  });		
+	}catch(err) {
+		console.log('Issue fetching/inserting data from DB ! ' + err);
+		return({ success: false, message: 'Issue fetching/inserting data from DB !'});
+	}
 }
 
 // Insert Document in cloudant DB
-var insertDocInCloudant = async (data, file) => {
-  dbForApplicantDocs.insert(data, function(err, body) {
-	if(!err) {
-	  console.log('Document related data inserted successfully !' + body);
-	  dbForApplicantDocs.attachment.insert(body.id, file.originalname, data, file.mimetype, { rev: body.rev }, function(err, body) {
-			if(!err) {
-			  fs.unlink(__dirname + '/upload/' + file.filename, function(err) {
-					if(!err)
-					  console.log('File deleted !');
-					else
-					  console.log('Issue deleting File');
-			  });
-			  console.log('Document uploaded successfully !');
-			  return({ success: true, message: 'Document uploaded successfully !' });
-			} else {
-			  console.log('Document upload issue !');
-			  return({ success: false, message: 'Document upload issue !' });
-			}
-	  });
-	} else {
+var insertDocInCloudant = async (data, file, docData) => {
+	console.log(data);
+	console.log(file);
+	try{
+		var response = await dbForApplicantDocs.insert(docData);
+		console.log('Document related data inserted successfully !');
+		var body = await dbForApplicantDocs.attachment.insert(response.id, file.originalname, data, file.mimetype, { rev: response.rev });
+		console.log('Document inserted successfully !');
+		return({ success: true, message: 'Document uploaded successfully !' });		
+	}catch(err){
 	  console.log('Document related data insertion issue ! ' + err);
 	  return({ success: false, message: 'Document related data insertion issue !' });
-	}
-  });		
+	} 		
 }
 
 // Trigger mail to user/applicant
@@ -349,14 +327,14 @@ var triggerEmail = async (receiverEmailId, subject, mailBody) => {
 	  subject: subject,
 	  html: mailBody
 	};
-	transporter.sendMail(mailOptions, function (err, info) {
-	   if(err)
+	try{
+		var response = await transporter.sendMail(mailOptions);
+		console.log('Mail triggered successfully to applicant' + info);
+		return({ success: true, message: 'Mail triggered successfully to applicant !' });
+	}catch(err){
 		console.log('Issues triggering mail to applicant ! ' + err);
 		return({ success: false, message: 'Issues triggering mail to applicant ! ' });
-	   else
-		console.log('Mail triggered successfully to applicant' + info);
-		return({ success: false, message: 'Mail triggered successfully to applicant !' });
-	});
+	}
 }
 
 app.listen(port);

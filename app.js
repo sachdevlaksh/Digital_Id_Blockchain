@@ -124,7 +124,7 @@ myApp.controller('applyDigitalId', ['$scope', 'fileUpload', '$http', '$filter', 
     digitalIdStatus: 'Pending',
     universityAdmissionStatus: 'Pending',
     currentDegreeStatus: false,
-	skillSetStatus : false,
+	skillSetStatus : 'Pending',
 	ssn: "",
 	message: "",
 	txnMsg: ""
@@ -177,7 +177,7 @@ myApp.controller('addSkillSets', ['$scope', 'fileUpload', '$http', '$filter', '$
       url: '/getDigitalIdData',
       data: data
     }).then(function successCallback(response) {
-      if(response.data.success == true && response.data.result[0].digitalIdStatus === "Approved" && !response.data.result[0].skillSetStatus) {
+      if(response.data.success == true && response.data.result[0].digitalIdStatus == 'Approved' && response.data.result[0].skillSetStatus == 'Pending') {
 		$scope.digitalIdData = response.data.result[0];
 		$scope.dob = new Date(response.data.result[0].digitalIdInfo.dateOfBirth);
 		$scope.off();
@@ -211,6 +211,10 @@ myApp.controller('addSkillSets', ['$scope', 'fileUpload', '$http', '$filter', '$
 /* Apply For University Controller */
 myApp.controller('applyUniversity', ['$scope', 'fileUpload', '$http', '$filter', '$window', function($scope, fileUpload, $http, $filter, $window) {
 
+  $scope.courses = ["Ancient History", "Computer Science", "Microservices"];
+
+  $scope.degreeTypes = ["UG", "PG"];
+	
   $scope.Back = function () {
         $window.location.href = '/student_portal.html';
   }
@@ -231,12 +235,12 @@ myApp.controller('applyUniversity', ['$scope', 'fileUpload', '$http', '$filter',
     $http({
       method: 'POST',
       url: '/getDigitalIdData',
-          data: data
+      data: data
     }).then(function successCallback(response) {
-      if(response.data.success == true) {
-                $scope.digitalIdData = response.data.result[0];
-                $scope.dob = new Date(response.data.result[0].digitalIdInfo.dateOfBirth);
-                $scope.off();
+      if(response.data.success == true  && response.data.result[0].digitalIdStatus == 'Approved' && response.data.result[0].skillSetStatus == 'Approved') {
+		$scope.digitalIdData = response.data.result[0];
+		$scope.dob = new Date(response.data.result[0].digitalIdInfo.dateOfBirth);
+		$scope.off();
       } else {
         alert(response.data.message);
                 window.close();
@@ -245,9 +249,28 @@ myApp.controller('applyUniversity', ['$scope', 'fileUpload', '$http', '$filter',
   }
 
   $scope.addUniversityData = function() {
+	var universityData = { universityName: $scope.selectedUniversityName, universityAddress: $scope.selectedUniversityAddress,
+						   universityId: $scope.selectedUniversityId, courseAppliedFor : $scope.selectedCourse,
+						   appliedDegreeType: $scope.selectedDegreeType, courseStartDate: '', courseEndDate: '',
+						   degreeCompleteStatus: false, digitalId: $scope.digitalIdData.digitalIdInfo.digitalId,
+						   registrationId: $scope.digitalIdData.digitalIdInfo.assessmentDetails.registrationId,
+						   universityDocument: ''};
+	var message = $scope.digitalIdData.message + " The applicant has added his university choices.";
+	$scope.digitalIdData.message = message;
+	$scope.digitalIdData.digitalIdInfo.universityDetails = universityData;
 
+	$http({
+	  method: 'POST',
+	  url: '/updateDigitalIdData',
+	  data: $scope.digitalIdData
+	}).then(function successCallback(response) {
+	  if(response.data.success == true) {
+		$window.location.href = '/university_success.html';
+	  } else {
+		alert(response.data.message);
+	  }
+	});	
   }
-
 }]);
 
 /* Consortium Admin Login Controller */
@@ -326,7 +349,7 @@ myApp.controller('assessmentAdminLogin', ['$scope', 'fileUpload', '$http', '$fil
 }]);
 
 /* University Success Controller */
-myApp.controller('universityAdmin', ['$scope', 'fileUpload', '$http', '$filter', '$window', function($scope, fileUpload, $http, $filter, $window) {
+myApp.controller('universityAdmin', ['$scope', '$http', '$window', 'NgTableParams', function($scope, $http, $window, NgTableParams) {
 
   $scope.getUniversityApplicantRequests = function() {
     $http({
@@ -500,7 +523,7 @@ myApp.controller('skillSetReadOnlyForm', ['$scope', 'fileUpload', '$http', '$fil
   $scope.updateDigitalIdData = function (buttonValue) {
 		var uniqueId = Date.now();
 		var assessmentDetails = { registrationId: uniqueId+'', assessmentUserAnswer: '', assessmentScore: '', digitalId: $scope.digitalIdData.digitalIdInfo.digitalId, assessmentDocument: '' } ;
-        var message = $scope.digitalIdData.message + " The skill set based as per your profile has been " + buttonValue + " and you will be mailed further details.";
+        var message = $scope.digitalIdData.message + " The skill set based as per your profile has been " + buttonValue + ".";
         $scope.digitalIdData.message = message;
 		$scope.digitalIdData.digitalIdInfo.assessmentDetails = assessmentDetails;
 
@@ -534,7 +557,7 @@ myApp.controller('skillSetReadOnlyForm', ['$scope', 'fileUpload', '$http', '$fil
 }]);
 
 /* Digital Id Read Only Form Controller */
-myApp.controller('universityReadOnlyForm  ', ['$scope', 'fileUpload', '$http', '$filter', '$window', function($scope, fileUpload, $http, $filter, $window) {
+myApp.controller('universityReadOnlyForm', ['$scope', 'fileUpload', '$http', '$filter', '$window', function($scope, fileUpload, $http, $filter, $window) {
 
   var data = {
         _id : $window.sessionStorage.getItem("_id")
